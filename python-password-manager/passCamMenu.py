@@ -29,8 +29,7 @@ def startup():
 def store():
     print("-" * 40)
     email = input("Email or Username: ")
-    unsecurePass = input("Password: ")
-    password = encryptPassword(unsecurePass)
+    password = input("Password: ")
     website = input("Website: ")
     store_data(email, password, website)
     print("Data has been stored.")

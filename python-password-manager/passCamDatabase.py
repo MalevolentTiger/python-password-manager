@@ -1,10 +1,14 @@
 import sqlite3
 from passCamEncryption import encryptPassword, decryptPassword
+from os.path import dirname, abspath
+from os.path import join as path_join
 
 #Database connection
 def connect_database():
     try:
-        connection = sqlite3.connect('passCam.db')
+        current_dir = dirname(abspath(__file__))
+        db_file = path_join(current_dir, 'passCam.db')
+        connection = sqlite3.connect(db_file)
     except Exception as e:
         print(e)
     return connection
@@ -19,6 +23,7 @@ def create_table():
 def store_data(email, password, website):
     connection = connect_database()
     cursor = connection.cursor()
+    password = encryptPassword(password)
     cursor.execute("""INSERT INTO passwords (email, password, website) VALUES (?,?,?)""", (email, password, website))
     connection.commit()
 
@@ -27,25 +32,34 @@ def find_info(email):
     cursor = connection.cursor()
     search = "SELECT * FROM passwords WHERE email = '{}'".format(email)
     cursor.execute(search)
-    userEmail = 0
-    for row in cursor:
+    row = cursor.fetchone()
+    while row:
         user, password, website = row
         print('-' * 40)
         print("Email or Username: ", user)
-        print("Encrypted Password: ", password)
-        print("Website: ", website)
+        print("Wesbite: ", website)
         print('-' * 40)
-        userEmail = 1
-    while userEmail == 1:
-        print("Would you like to view the password for this account?")
-        print("Y/N")
-        choice = input(": ")
-        if choice.lower() == "y":
-            password = decryptPassword(password)
-            print("Decrypted Password: ", password)
-            userEmail = 0
-        elif choice.lower() == "n":
-            userEmail = 0
-        else:
-            print("Please enter y or n.")
+
+        question = True
+        keepSearching = True
+
+        while question == True:
+            print("Would you like to see the password for this account?")
+            print("Y/N")
+            choice = input(": ")
+            if choice.lower() != "y" and choice.lower() != "n" and choice.lower() != "yes" and choice.lower() != "no":
+                print("Sorry, that is not y/n")
+                print("Please type one of the options.")
+            elif choice.lower() == "y" or choice.lower() == "yes":
+                unencryptedPassword = decryptPassword(password)
+                print("The password for this account is: ", unencryptedPassword)
+                question = False
+                keepSearching = False
+            elif choice.lower() == "n" or choice.lower() == "no":
+                question = False
+                row = cursor.fetchone()
+        
+        if keepSearching == False:
+            break
+
     connection.commit()

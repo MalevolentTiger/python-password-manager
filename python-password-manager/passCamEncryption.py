@@ -1,17 +1,21 @@
 from cryptography.fernet import Fernet
-from os.path import exists as file_exists
+from os.path import dirname, abspath
+from os.path import join as path_join
+from os.path import exists
 
 def generateKey():
-    check = file_exists('.env')
-    if check == True:
-        pass
-    elif check == False:
+    current_dir = dirname(abspath(__file__))
+    env_file_path = path_join(current_dir, ".env")
+
+    if not exists(env_file_path):
         key = Fernet.generate_key()
-        with open(".env", "wb") as keyFile:
+        with open(env_file_path, "wb") as keyFile:
             keyFile.write(key)
 
 def loadKey():
-    return open(".env", "rb").read()
+    current_dir = dirname(abspath(__file__))
+    env_file_path = path_join(current_dir, ".env")
+    return open(env_file_path, "rb").read()
 
 def encryptPassword(password):
     key = loadKey()
